@@ -1,9 +1,23 @@
+//constants/dependencies
+require("dotenv/config");
 const express = require("express");
-
 const app = express();
+const bodyParser = require("body-parser");
 
-app.listen(3000,() => console.log("Server listening at port 3000"));
+const PORT = process.env.PORT;
 
-app.get("/", (req, res) => {
-    res.send("Hello World");
-});
+//Routes
+const usersRoute = require("./routes/users");
+const scanRoute = require("./routes/scan");
+const skillsRoute = require("./routes/skills");
+
+//Middleware
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+//route connections
+app.use("/users", usersRoute);
+app.use("/scan", scanRoute);
+app.user("/skills", skillsRoute);
+
+app.listen(PORT, () => { console.log(`app listening on port ${PORT}`)})
