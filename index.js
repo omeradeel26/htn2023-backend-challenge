@@ -18,6 +18,6 @@ app.use(bodyParser.json());
 //route connections
 app.use("/users", usersRoute);
 app.use("/scan", scanRoute);
-app.user("/skills", skillsRoute);
+app.use("/skills", skillsRoute);
 
 app.listen(PORT, () => { console.log(`app listening on port ${PORT}`)})
