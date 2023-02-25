@@ -3,7 +3,7 @@ const router = express.Router();
 const sqlite3 = require("sqlite3").verbose();
 
 let sql;
-let db = new sqlite3.Database("./users.db", sqlite3.OPEN_READWRITE, (err) => {
+let db = new sqlite3.Database("./database/users.db", sqlite3.OPEN_READWRITE, (err) => {
   if (err) {
     return console.error(err.message);
   }

@@ -3,7 +3,7 @@ const router = express.Router();
 const sqlite3 = require("sqlite3").verbose();
  
 let sql;
-let db = new sqlite3.Database("./skills.db", sqlite3.OPEN_READWRITE, (err) => {
+let db = new sqlite3.Database("./database/skills.db", sqlite3.OPEN_READWRITE, (err) => {
   if (err) {
     return console.error(err.message);
   }
@@ -25,32 +25,35 @@ router.get("/all", async (req, res) => {
     }
 });
 
-router.get("/frequency", async (req, res) => {
+router.get("/frequencies", async (req, res) => {
   try {
-    let { skill } = await req.query;
-
-    skill = '"' + skill + '"'
-
-    let sql = `SELECT ${skill} FROM skills`
+    let sql = `SELECT * FROM skills`
 
     db.all(sql, [], (err, rows) => {
       if (err) {
         return console.error(err.message);
       } else {
         let numUsers = 0;
+        let columns;
         for (let i=0; i<rows.length; i++){
-          const row = rows[i];
+          if (i == 0){
+            columns = Object.keys(rows[i]);
+            columns = columns.reduce(
+              (a, key) => Object.assign(a, { [key]: 0 }),
+              {}
+            );
+          }
 
-          const val = Object.keys(row).map(function(key) {
-            return row[key];
-          })
-
-          if (val[0] > 0){
-            numUsers+=1
+          const keys = Object.keys(columns);
+          for (x=0; x<keys.length;x++){
+            if (rows[i][keys[x]] > 0){
+              columns[keys[x]] +=1;
+            }
           }
         }
+        delete columns.id;
 
-        return res.json({skill: req.query.skill, frequency: numUsers});
+        return res.json(columns);
       }
     });
   } catch (error) {
@@ -58,32 +61,44 @@ router.get("/frequency", async (req, res) => {
   }
 });
 
-router.get("/frequencyComparisons", async (req, res) => {
+router.get("/frequencyFilter", async (req, res) => {
   try {
     let { minFreq, maxFreq} = await req.query;
 
-    skill = '"' + skill + '"'
-
-    let sql = `SELECT ${skill} FROM skills`
+    let sql = `SELECT * FROM skills`
 
     db.all(sql, [], (err, rows) => {
       if (err) {
         return console.error(err.message);
       } else {
         let numUsers = 0;
+        let columns;
         for (let i=0; i<rows.length; i++){
-          const row = rows[i];
+          if (i == 0){
+            columns = Object.keys(rows[i]);
+            columns = columns.reduce(
+              (a, key) => Object.assign(a, { [key]: 0 }),
+              {}
+            );
+          }
 
-          const val = Object.keys(row).map(function(key) {
-            return row[key];
-          })
-
-          if (val[0] > 0){
-            numUsers+=1
+          const keys = Object.keys(columns);
+          for (x=0; x<keys.length;x++){
+            if (rows[i][keys[x]] > 0){
+              columns[keys[x]] +=1;
+            }
           }
         }
+        delete columns.id;
 
-        return res.json({skill: req.query.skill, frequency: numUsers});
+        const keys = Object.keys(columns);
+        for (x=0; x<keys.length;x++){
+          if (columns[keys[x]] > maxFreq || columns[keys[x]] < minFreq){
+            delete columns[keys[x]]
+          }
+        }
+        
+        return res.json(columns);
       }
     });
   } catch (error) {

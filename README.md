@@ -10,6 +10,7 @@ Installation/Usage Instructions
 Fork the repository.
 Install all required dependencies, such as Node, Express, and Sqlite.
 Run 'node init_database' to initialize the database.
+Run 'node index' to turn on server
 Use an API testing service to test different API routes.
 Enjoy!
 
@@ -18,7 +19,7 @@ API Routes
 (GET) /users/:id: Input any positive integer ID number between 1-1000 to obtain information about a given user.
 (PUT) /users/update/{query}: Update any user's information given any of their information as input, such as name or email.
 (GET) /skills/frequencies: Get all frequencies of each registered skill in the database.
-(GET) /skills/frequencyComparisons{query}: Get all frequencies of skills between a minimum and maximum frequency.
+(GET) /skills/frequencyFilter{query}: Get all frequencies of skills between a minimum and maximum frequency. (maxFreq and minFreq)
 
 Project Structure
 node_modules: NPM installed modules (managed with package-lock/package.json).
