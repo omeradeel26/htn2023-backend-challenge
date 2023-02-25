@@ -58,9 +58,9 @@ router.get("/frequency", async (req, res) => {
   }
 });
 
-router.get("/frequency", async (req, res) => {
+router.get("/frequencyComparisons", async (req, res) => {
   try {
-    let { skill } = await req.query;
+    let { minFreq, maxFreq} = await req.query;
 
     skill = '"' + skill + '"'
 
