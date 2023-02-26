@@ -38,6 +38,10 @@ routes:
     skills.js: Manages all GET routes related to skills data, including skills frequencies.  
       
     users.js: Manages all GET/PUT routes for all or individual user information.  
+    
+    registration.js: Manages all POST/DELETE routes for user registration.  
+    
+    scan.js: Manages all GET/PUT routes for users scan events to account. 
       
 database:  
   
