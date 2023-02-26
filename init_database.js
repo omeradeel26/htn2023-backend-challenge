@@ -1,7 +1,7 @@
 const axios = require("axios");
 const sqlite3 = require("sqlite3");
 
-async function createSkillsDB({skillsList,data}) {
+async function createSkillsDB({ skillsList, data }) {
   try {
     let sql;
     let db = await new sqlite3.Database(
@@ -30,21 +30,23 @@ async function createSkillsDB({skillsList,data}) {
                   {}
                 );
 
-
                 for (let x = 0; x < skills.length; x++) {
-                  if (skillsObject.hasOwnProperty(`"`+skills[x].skill+`"`)) {
-                    skillsObject[`"`+skills[x].skill+`"`] = skills[x].rating;
+                  if (
+                    skillsObject.hasOwnProperty(`"` + skills[x].skill + `"`)
+                  ) {
+                    skillsObject[`"` + skills[x].skill + `"`] =
+                      skills[x].rating;
                   }
                 }
 
-                const arr = Object.keys(skillsObject).map(function(key) {
+                const arr = Object.keys(skillsObject).map(function (key) {
                   return skillsObject[key];
-              })
+                });
 
                 db.run(sql, [...arr], (err) => {
                   if (err) return console.error(err.message);
                 });
-              }           
+              }
             } else {
               console.log(err);
             }
@@ -78,10 +80,10 @@ async function createUserDB(data) {
         async (err) => {
           if (!err) {
             // initialize database
-            sql = `CREATE TABLE users(id INTEGER PRIMARY KEY,first_name, last_name, company, email, phone)`;
+            sql = `CREATE TABLE users(id INTEGER PRIMARY KEY,first_name, last_name, company, email, phone, events)`;
             await db.run(sql, (err) => {
               if (!err) {
-                sql = `INSERT INTO users(first_name, last_name, company, email, phone) VALUES (?,?,?,?,?)`;
+                sql = `INSERT INTO users(first_name, last_name, company, email, phone, events) VALUES (?,?,?,?,?,?)`;
                 for (let i = 0; i < data.length; i++) {
                   const { name, company, email, phone, skills } = data[i];
                   for (let x = 0; x < skills.length; x++) {
@@ -92,14 +94,14 @@ async function createUserDB(data) {
                   const [f_name, l_name] = name.split(" ");
                   db.run(
                     sql,
-                    [f_name, l_name, company, email, phone],
+                    [f_name, l_name, company, email, phone, "[]"],
                     (err) => {
                       if (err) return console.error(err.message);
                     }
                   );
 
                   if (i == data.length - 1) {
-                    resolve({skillsList:skillsList, data:data});
+                    resolve({ skillsList: skillsList, data: data });
                   }
                 }
               }

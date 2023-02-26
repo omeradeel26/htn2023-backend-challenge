@@ -1,14 +1,28 @@
+const e = require("express");
 const express = require("express");
 const router = express.Router();
 const sqlite3 = require("sqlite3").verbose();
 
 let sql;
-let db = new sqlite3.Database("./database/users.db", sqlite3.OPEN_READWRITE, (err) => {
-  if (err) {
-    return console.error(err.message);
+let db = new sqlite3.Database(
+  "./database/users.db",
+  sqlite3.OPEN_READWRITE,
+  (err) => {
+    if (err) {
+      return console.error(err.message);
+    }
   }
-  console.log("Connected to the SQlite database.");
-});
+);
+
+let skillsDb = new sqlite3.Database(
+  "./database/skills.db",
+  sqlite3.OPEN_READWRITE,
+  (err) => {
+    if (err) {
+      return console.error(err.message);
+    }
+  }
+);
 
 router.get("/all", async (req, res) => {
   try {
@@ -34,7 +48,22 @@ router.get("/:id", async (req, res) => {
       if (err) {
         return console.error(err.message);
       } else {
-        return res.json(row);
+        let sql = `SELECT * FROM skills WHERE id = ?`;
+        skillsDb.get(sql, [id], (err, response) => {
+          if (err) {
+            return console.error(err.message);
+          } else {
+            const skills = Object.keys(response);
+            for (i = 0; i < skills.length; i++) {
+              if (response[skills[i]] == 0) {
+                delete response[skills[i]];
+              }
+            }
+            delete response.id;
+            row.skills = response;
+            return res.json(row);
+          }
+        });
       }
     });
   } catch (error) {
@@ -43,50 +72,95 @@ router.get("/:id", async (req, res) => {
 });
 
 router.put("/update", async (req, res) => {
-  const { name, company, email, phone, id, skills} = await req.query;
+  const { skills, f_name, l_name, company, email, phone, id } = await req.body;
 
-  console.log(name, company, email, phone, id)
+  if (
+    !(
+      f_name == undefined &&
+      l_name == undefined &&
+      company == undefined &&
+      email == undefined &&
+      phone == undefined
+    )
+  ) {
+    sql = `UPDATE users SET`;
 
-  sql = `UPDATE users SET`;
+    const vars = [];
 
-  const vars = [];
+    if (f_name != undefined) {
+      vars.push(f_name);
+      sql += ` first_name = ?,`;
+    }
 
-  if (name != undefined){
-    let [f_name, l_name] = name.split(" "); 
-    vars.push(f_name)
-    vars.push(l_name)
-    sql += " first_name = ? last_name = ?"
+    if (l_name != undefined) {
+      vars.push(l_name);
+      sql += ` last_name = ?,`;
+    }
+
+    if (company != undefined) {
+      vars.push(company);
+      sql += ` company = ?,`;
+    }
+
+    if (phone != undefined) {
+      vars.push(phone);
+      sql += ` phone = ?,`;
+    }
+
+    if (email != undefined) {
+      vars.push(email);
+      sql += ` email = ?`;
+    }
+
+    sql += ` WHERE id = ?`;
+    vars.push(id);
+
+    try {
+      await db.run(sql, vars, (err) => {
+        if (err) return console.error(err.message);
+        res.status(200).json({ status: "success" });
+      });
+    } catch (error) {
+      res.status(400).json({ status: "failure" });
+      return console.error(error.message);
+    }
   }
-  
-  if (company != undefined){
-    vars.push(company)
-    sql += " company = ?"
-  }
-  
-  if (email != undefined){
-    vars.push(email)
-    sql += " email = ?"
-  }
-  
-  if (phone != undefined){
-    vars.push(phone)
-    sql += " phone = ?"
-  }
 
-  sql += " WHERE id = ?"
-  vars.push(id)
+  if (skills != undefined) {
+    try {
+      let sql = `SELECT * FROM users WHERE id = ?`;
 
-  console.log(sql)
-  console.log(vars)
+      skillsDb.all("SELECT * FROM skills LIMIT 1", [], (err, rows) => {
+        if (err) {
+          console.error(err.message);
+        } else {
+          const columns = Object.keys(rows[0]);
+          for (let i = 0; i < skills.length; i++) {
+            let { skill } = skills[i];
+            if (!columns.includes(skill)) {
+              skill = `"` + skill + `"`;
 
-  try {
-    await db.run(sql, vars, (err) => {
-      if (err) return console.error(err.message);
-      res.status({ code: 200, success: true });
-    });
-  } catch (error) {
-    res.status({ code: 400, success: false });
-    return console.error(error.message);
+              sql = `ALTER TABLE skills ADD ${skill} INTEGER DEFAULT 0`;
+              skillsDb.run(sql, [], (err) => {
+                if (err) console.error(err);
+              });
+            }
+          }
+        }
+      });
+
+      for (let i = 0; i < skills.length; i++) {
+        let { skill, rating } = skills[i];
+        skill = `"` + skill + `"`;
+        sql = `UPDATE skills SET ${skill} = ? WHERE id = ?`;
+        skillsDb.run(sql, [rating, id], (err) => {
+          if (err) console.error(err);
+        });
+      }
+    } catch (error) {
+      res.status(400).json({ status: "failure" });
+      return console.error(error.message);
+    }
   }
 });
 
